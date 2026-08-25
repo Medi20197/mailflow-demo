@@ -1,113 +1,56 @@
-import { FormEvent, useMemo, useState } from 'react'
-import { Activity, ArrowUpRight, CheckCircle2, Clock3, Github, Inbox, LayoutDashboard, Plus, Search, Send, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ArrowLeft, ArrowRight, ArrowUpRight, Building2, CheckCircle2, Github, LayoutDashboard, Mail, Menu, ShieldCheck, Sparkles, Users } from 'lucide-react'
 
-type Item = {
-  id: string
-  title: string
-  contact: string
-  direction: 'Reçu' | 'Envoyé'
-  status: 'À traiter' | 'En cours' | 'Terminé'
-  date: string
+type Project = {
+  slug: string; name: string; label: string; description: string; icon: typeof Mail; color: string
+  highlights: string[]; metrics: [string, string][]; steps: string[]
 }
 
-const initialItems: Item[] = [
-  { id: 'DEMO-001', title: 'Demande de présentation', contact: 'Studio Horizon', direction: 'Reçu', status: 'À traiter', date: 'Aujourd’hui, 09:30' },
-  { id: 'DEMO-002', title: 'Confirmation de rendez-vous', contact: 'Projet Nova', direction: 'Envoyé', status: 'Terminé', date: 'Hier, 16:10' },
-  { id: 'DEMO-003', title: 'Retour sur la proposition', contact: 'Collectif Atlas', direction: 'Reçu', status: 'En cours', date: 'Hier, 11:45' },
-  { id: 'DEMO-004', title: 'Compte rendu de réunion', contact: 'Équipe Démonstration', direction: 'Envoyé', status: 'Terminé', date: '22 août, 14:20' },
+const projects: Project[] = [
+  { slug: 'mailflow', name: 'MailFlow', label: 'Suivi & collaboration', description: 'Une interface générique de suivi des échanges, centrée sur la lisibilité, la recherche et la progression visuelle.', icon: Mail, color: 'blue', highlights: ['Tableau de bord responsive', 'Recherche et filtres instantanés', 'Interactions locales fictives'], metrics: [['24', 'Éléments fictifs'], ['8', 'En cours'], ['92 %', 'Progression démo']], steps: ['Nouvel élément fictif ajouté', 'Statut de démonstration mis à jour', 'Vue synthétique actualisée'] },
+  { slug: 'govflow', name: 'GovFlow', label: 'Pilotage de processus', description: 'Une présentation conceptuelle d’un espace de pilotage, sans reprendre de procédure ni de structure organisationnelle réelle.', icon: Building2, color: 'violet', highlights: ['Vue synthétique des initiatives', 'Composants accessibles et cohérents', 'Visualisation générique de progression'], metrics: [['12', 'Initiatives fictives'], ['5', 'Étapes actives'], ['87 %', 'Objectifs démo']], steps: ['Initiative Exemple créée', 'Jalon fictif validé', 'Indicateur de démonstration actualisé'] },
+  { slug: 'garde-tranquille', name: 'Garde Tranquille', label: 'Organisation d’équipe', description: 'Une vitrine générique de planification et de coordination, alimentée uniquement par des scénarios inventés.', icon: ShieldCheck, color: 'green', highlights: ['Planning visuel simplifié', 'Répartition fictive des disponibilités', 'Expérience mobile responsive'], metrics: [['18', 'Créneaux fictifs'], ['6', 'Profils démo'], ['100 %', 'Données inventées']], steps: ['Créneau Démo planifié', 'Disponibilité fictive confirmée', 'Aperçu hebdomadaire actualisé'] },
 ]
 
 const profileUrl = import.meta.env.VITE_PROFILE_URL || 'https://github.com/Medi20197'
 
 export default function App() {
-  const [items, setItems] = useState<Item[]>(initialItems)
-  const [query, setQuery] = useState('')
-  const [filter, setFilter] = useState<'Tous' | Item['status']>('Tous')
-  const [showForm, setShowForm] = useState(false)
+  const [route, setRoute] = useState(location.hash.replace('#/', '') || 'portfolio')
+  const [menuOpen, setMenuOpen] = useState(false)
+  useEffect(() => { const sync = () => { setRoute(location.hash.replace('#/', '') || 'portfolio'); setMenuOpen(false); scrollTo(0, 0) }; addEventListener('hashchange', sync); return () => removeEventListener('hashchange', sync) }, [])
+  const project = projects.find(item => item.slug === route)
 
-  const filtered = useMemo(() => items.filter(item => {
-    const matchesQuery = `${item.title} ${item.contact} ${item.id}`.toLowerCase().includes(query.toLowerCase())
-    return matchesQuery && (filter === 'Tous' || item.status === filter)
-  }), [items, query, filter])
-
-  const counts = {
-    total: items.length,
-    pending: items.filter(item => item.status === 'À traiter').length,
-    active: items.filter(item => item.status === 'En cours').length,
-    done: items.filter(item => item.status === 'Terminé').length,
-  }
-
-  const addItem = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const data = new FormData(event.currentTarget)
-    setItems(current => [{
-      id: `DEMO-${String(current.length + 1).padStart(3, '0')}`,
-      title: String(data.get('title')),
-      contact: String(data.get('contact')),
-      direction: data.get('direction') as Item['direction'],
-      status: 'À traiter',
-      date: 'À l’instant',
-    }, ...current])
-    setShowForm(false)
-  }
-
-  const advance = (id: string) => setItems(current => current.map(item => item.id !== id ? item : {
-    ...item,
-    status: item.status === 'À traiter' ? 'En cours' : 'Terminé'
-  }))
-
-  return (
-    <div className="app-shell">
-      <div className="demo-notice">Démonstration portfolio indépendante · données entièrement fictives · aucune règle interne reproduite</div>
-      <header>
-        <a className="brand" href="#top"><span className="brand-mark"><Send size={20} /></span><span>MailFlow</span></a>
-        <a className="profile-link" href={profileUrl} target="_blank" rel="noreferrer"><Github size={18} /> Profil GitHub <ArrowUpRight size={15} /></a>
-      </header>
-
-      <main id="top">
-        <aside>
-          <nav>
-            <a className="active" href="#dashboard"><LayoutDashboard size={18} /> Vue d’ensemble</a>
-            <a href="#activity"><Activity size={18} /> Activité récente</a>
-          </nav>
-          <div className="privacy-card"><strong>Version publique</strong><p>Cette interface illustre uniquement le design et les interactions générales du produit.</p></div>
-        </aside>
-
-        <section className="content" id="dashboard">
-          <div className="hero">
-            <div><p className="eyebrow">PORTFOLIO PRODUIT</p><h1>Tableau de bord</h1><p>Une démonstration générique de suivi, conçue sans données ni processus confidentiels.</p></div>
-            <button className="primary" onClick={() => setShowForm(true)}><Plus size={18} /> Ajouter un élément fictif</button>
-          </div>
-
-          <div className="stats">
-            <Stat icon={<Inbox />} label="Total" value={counts.total} tone="blue" />
-            <Stat icon={<Clock3 />} label="À traiter" value={counts.pending} tone="amber" />
-            <Stat icon={<Activity />} label="En cours" value={counts.active} tone="violet" />
-            <Stat icon={<CheckCircle2 />} label="Terminés" value={counts.done} tone="green" />
-          </div>
-
-          <div className="panel" id="activity">
-            <div className="panel-head">
-              <div><h2>Activité récente</h2><p>Contenu fictif modifiable localement pendant votre visite.</p></div>
-              <div className="controls">
-                <label className="search"><Search size={17} /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Rechercher…" /></label>
-                <select value={filter} onChange={e => setFilter(e.target.value as typeof filter)}>
-                  <option>Tous</option><option>À traiter</option><option>En cours</option><option>Terminé</option>
-                </select>
-              </div>
-            </div>
-            <div className="table-wrap"><table><thead><tr><th>Identifiant fictif</th><th>Objet</th><th>Contact fictif</th><th>Type</th><th>Statut</th><th>Date</th><th></th></tr></thead>
-              <tbody>{filtered.map(item => <tr key={item.id}><td className="mono">{item.id}</td><td className="title-cell">{item.title}</td><td>{item.contact}</td><td>{item.direction}</td><td><span className={`status ${item.status.replace(' ', '-').toLowerCase()}`}>{item.status}</span></td><td>{item.date}</td><td>{item.status !== 'Terminé' && <button className="advance" onClick={() => advance(item.id)}>Avancer</button>}</td></tr>)}</tbody>
-            </table>{filtered.length === 0 && <div className="empty">Aucun résultat pour cette recherche.</div>}</div>
-          </div>
-        </section>
-      </main>
-
-      {showForm && <div className="overlay" onMouseDown={() => setShowForm(false)}><form className="modal" onSubmit={addItem} onMouseDown={e => e.stopPropagation()}><button type="button" className="close" onClick={() => setShowForm(false)}><X /></button><p className="eyebrow">DONNÉES FICTIVES</p><h2>Nouvel élément</h2><p>Ajoutez un exemple temporaire à la démonstration.</p><label>Objet<input name="title" required placeholder="Ex. Demande d’information" /></label><label>Contact fictif<input name="contact" required placeholder="Ex. Organisation Exemple" /></label><label>Type<select name="direction"><option>Reçu</option><option>Envoyé</option></select></label><button className="primary" type="submit"><Plus size={18} /> Ajouter à la démo</button></form></div>}
-    </div>
-  )
+  return <div className="shell">
+    <div className="notice">Portfolio public · interfaces fictives · aucune donnée ni règle interne reproduite</div>
+    <header>
+      <a className="brand" href="#/"><span className="logo"><Sparkles size={19}/></span><span>Portfolio<span className="dot">.</span></span></a>
+      <button className="menu" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu"><Menu /></button>
+      <nav className={menuOpen ? 'open' : ''}>
+        <a className={route === 'portfolio' ? 'active' : ''} href="#/">Projets</a>
+        {projects.map(item => <a key={item.slug} className={route === item.slug ? 'active' : ''} href={`#/${item.slug}`}>{item.name}</a>)}
+      </nav>
+      <a className="github" href={profileUrl} target="_blank" rel="noreferrer"><Github size={18}/> GitHub <ArrowUpRight size={14}/></a>
+    </header>
+    {project ? <ProjectPage project={project}/> : <PortfolioHome/>}
+    <footer><span>Portfolio frontend — démonstrations publiques indépendantes</span><a href={profileUrl}>Medi20197 sur GitHub</a></footer>
+  </div>
 }
 
-function Stat({ icon, label, value, tone }: { icon: React.ReactNode, label: string, value: number, tone: string }) {
-  return <div className="stat"><span className={`stat-icon ${tone}`}>{icon}</span><div><span>{label}</span><strong>{value}</strong></div></div>
+function PortfolioHome() {
+  return <main className="home">
+    <section className="intro"><p className="kicker">SÉLECTION DE PROJETS</p><h1>Des produits numériques clairs,<br/><em>utiles et bien structurés.</em></h1><p>Trois démonstrations frontend reconstruites avec des contenus entièrement fictifs pour présenter le design, l’ergonomie et la qualité d’implémentation.</p></section>
+    <section className="project-grid">{projects.map((project, index) => { const Icon = project.icon; return <a className={`project-card ${project.color}`} href={`#/${project.slug}`} key={project.slug}>
+      <div className="card-top"><span className="project-number">0{index + 1}</span><span className="project-icon"><Icon/></span></div><p>{project.label}</p><h2>{project.name}</h2><div className="card-description">{project.description}</div><span className="discover">Découvrir le projet <ArrowRight size={17}/></span>
+    </a>})}</section>
+    <section className="principles"><div><p className="kicker">APPROCHE</p><h2>Ce que ces démonstrations mettent en valeur</h2></div><div className="principle-list"><span><strong>01</strong> Design responsive</span><span><strong>02</strong> Architecture React</span><span><strong>03</strong> Interfaces accessibles</span><span><strong>04</strong> Confidentialité par conception</span></div></section>
+  </main>
+}
+
+function ProjectPage({ project }: { project: Project }) {
+  const Icon = project.icon
+  return <main className={`project-page ${project.color}`}>
+    <section className="project-hero"><a className="back" href="#/"><ArrowLeft size={16}/> Tous les projets</a><div className="hero-grid"><div><p className="kicker">DÉMONSTRATION PUBLIQUE</p><h1>{project.name}</h1><p>{project.description}</p><div className="chips">{project.highlights.map(item => <span key={item}><CheckCircle2 size={15}/>{item}</span>)}</div></div><div className="hero-visual"><span className="large-icon"><Icon/></span><div><small>PROJET PORTFOLIO</small><strong>{project.name}</strong><p>{project.label}</p></div></div></div></section>
+    <section className="demo-area"><div className="demo-toolbar"><div><LayoutDashboard size={19}/><strong>Aperçu de démonstration</strong></div><span>Données fictives</span></div><div className="metrics">{project.metrics.map(([value,label]) => <div className="metric" key={label}><strong>{value}</strong><span>{label}</span></div>)}</div><div className="demo-columns"><div className="activity-panel"><div className="panel-title"><h3>Activité récente</h3><span>Vue illustrative</span></div>{project.steps.map((step,index) => <div className="activity-row" key={step}><span className="avatar">{index + 1}</span><div><strong>{step}</strong><small>Exemple fictif · il y a {index + 1} h</small></div><span className="pill">Démo</span></div>)}</div><div className="quality-panel"><Users/><h3>Expérience produit</h3><p>Une interface pensée pour rester claire sur ordinateur comme sur mobile.</p><div className="progress"><span style={{width:'88%'}}/></div><small>Qualité visuelle illustrative</small></div></div></section>
+    <section className="disclaimer"><ShieldCheck/><div><strong>Confidentialité par conception</strong><p>Cette page a été créée spécialement pour le portfolio. Elle n’expose aucune donnée, aucun schéma et aucune logique du produit d’origine.</p></div></section>
+  </main>
 }

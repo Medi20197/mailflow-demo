@@ -2,7 +2,7 @@
 
 **[Ouvrir la démonstration](https://medi20197.github.io/mailflow-demo/)** · **[Profil GitHub](https://github.com/Medi20197)**
 
-Cette édition publique est une interface fictive et indépendante. Elle illustre uniquement des compétences de conception frontend : tableau de bord, indicateurs, recherche, filtres, formulaire et interactions locales.
+Cette édition publique regroupe trois présentations fictives et indépendantes : **MailFlow**, **GovFlow** et **Garde Tranquille**. Elles illustrent uniquement des compétences de conception frontend, de navigation, de tableaux de bord et de design responsive.
 
 Elle n'utilise aucun backend, aucune donnée réelle et aucune règle issue du produit d'origine. Les exemples sont génériques et disparaissent au rechargement de la page.
 
