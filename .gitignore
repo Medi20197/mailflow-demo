@@ -19,3 +19,4 @@ frontend/.env.*
 Thumbs.db
 .idea/
 .vscode/
+/external/
